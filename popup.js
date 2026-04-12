@@ -179,6 +179,8 @@ function buildPrompt({ bloggerName, sourceText }) {
   const openingHints = buildOpeningHints(sourceText);
   const answerHints = buildAnswerHints(sourceText);
   const questionFrameHints = buildQuestionFrameHints(sourceText);
+  const styleHints = buildStyleHints(sourceText);
+  const antiStiffnessHints = buildAntiStiffnessHints(sourceText);
 
   return `你是一个中文社交媒体高回复率评论文案助手，目标是写出“博主很容易顺手回复”的一句评论。
 
@@ -204,8 +206,10 @@ function buildPrompt({ bloggerName, sourceText }) {
 8. 最好让博主一句话就能回，回复压力越低越好。
 9. 回复要短，优先 12 到 24 个中文字符，最多 30 个中文字符。
 10. 语气自然、像真人，稍微口语化，不要过度吹捧。
-11. 不要输出多个版本，不要解释，不要加引号，不要加序号。
-12. 不要使用 emoji、标签、英文营销词。
+11. 如果原文带表情、感叹号、玩笑口吻、自嘲口吻，回复也可以轻微贴合语气；必要时最多带 1 个贴切 emoji。
+12. 如果原文没有表情或明显轻松口吻，就不要硬加 emoji。
+13. 不要输出多个版本，不要解释，不要加引号，不要加序号。
+14. 不要使用标签、英文营销词。
 
 内容识别时，不要只盯一种类型。优先在这些内容类型里选最强的 1 个：
 ${archetypeHints}
@@ -218,11 +222,14 @@ ${archetypeHints}
 - 不要让博主重新写一篇长回答
 - 不要写“方便展开讲讲吗”“能详细说说吗”“可以系统讲下吗”这种高压力问法
 - 不要形成固定模板，不要动不动就用“是不是”起手
+- 如果原文是在报喜、晒成绩、晒榜单、庆祝里程碑，不要把回复拐成“为什么做到”“是不是因为某赛道更容易”“主要原因是啥”这种分析题
+- 如果原文在玩梗、自嘲、轻松炫耀，回复不要过于学术、过于冷硬
+- 如果原文术语很多，不要把术语原样拼接成问题；优先翻成更像人话的核心判断
 
 隐藏分析步骤：
 1. 先看原文最显眼的是成果、判断、资源入口、方法、情绪立场，还是身份表达。
 2. 再判断博主最希望评论区出现哪种声音。
-3. 再判断最自然的问法开头，不要机械重复。
+3. 如果原文很多术语，先提炼成人话里的核心意思，再决定问法。
 4. 最终只输出评论，不要暴露你的分析过程。
 
 从文本推测博主诉求时，可参考这些线索：
@@ -236,6 +243,12 @@ ${answerHints}
 
 可优先套用这些低压力问句骨架：
 ${questionFrameHints}
+
+语气和表情可参考：
+${styleHints}
+
+避免生硬可参考：
+${antiStiffnessHints}
 
 风格参考：
 示例 1
@@ -251,11 +264,28 @@ ${questionFrameHints}
 错误回复：纯银老师认为新人需定向积累哪些能力
 更好回复：纯银老师，新人先抓复盘能力就行吗
 
+示例 4
+原文：横扫微信读书榜单！微信读书现在的「飙升榜」「热搜榜」「新书榜」三个榜单上都有我的橙皮书 小说榜臣妾真做不到了。。
+错误回复：这次主要是非小说更容易冲榜吗
+更好回复：三个榜都上了，橙皮书这波算出圈了吧😄
+
+示例 5
+原文：MM（做市商呢）牛市？ 买的人多，直接卖；空的人多，直接拉。多看看A股的每日抢板交易手法。
+错误回复：这里更像看抢板节奏做反向吗
+更好回复：所以现在更像哪边挤得多就先收哪边吗
+
+示例 6
+原文：MM（做市商呢）牛市？ 买的人多，直接卖；空的人多，直接拉。散户还是被玩弄股掌之间。。。
+一般回复：所以核心是先看哪边情绪更挤吗hhh
+更好回复：所以现在还是谁挤谁先挨打吗hhh
+
 输出前自检：
 - 有没有引用原文细节？
 - 是不是顺着博主最想被接住的点在发问？
 - 是不是一个小问题而不是大问题？
 - 有没有避免机械地用“是不是”起手？
+- 如果原文在报喜或玩梗，我有没有顺着夸点或梗点，而不是硬转成分析题？
+- 如果原文有吐槽、无奈、嘲讽语气，我有没有写得更像人话接话，而不是总结报告？
 - 博主是不是几秒钟就能回？
 - 博主能不能一句话回复？
 
@@ -403,6 +433,8 @@ function buildRetryPrompt({ sourceText, bloggerName, previousReply, finishReason
   const openingHints = buildOpeningHints(sourceText);
   const answerHints = buildAnswerHints(sourceText);
   const questionFrameHints = buildQuestionFrameHints(sourceText);
+  const styleHints = buildStyleHints(sourceText);
+  const antiStiffnessHints = buildAntiStiffnessHints(sourceText);
 
   const issueLine = needsRewrite
     ? "你刚才输出的问题太大或回复压力太高，现在请改写成更容易顺手回复的小判断问题。"
@@ -419,9 +451,12 @@ function buildRetryPrompt({ sourceText, bloggerName, previousReply, finishReason
 6. 只有原文明显在做判断、预测、站立场时，才可以偶尔用“是不是”。
 7. 可参考这些开头：“这个能直接…吗 / 这次更像…吗 / 你这里主要是…吗 / 这种情况会不会… / 这里算不算…”。
 8. 不要让博主需要展开长解释，不要出现“展开讲讲”“详细说说”“系统讲下”。
-9. 长度控制在 12 到 30 个中文字符。
-10. 不要解释，不要分点，不要引号。
-11. 不要再输出“哪些能力”“怎么看”“如何做”“建议是什么”。
+9. 如果原文是在报喜、晒成绩、晒榜单、玩梗、自嘲，就顺着那个夸点或梗点问，不要拐成成因分析题。
+10. 如果原文带表情或轻松口吻，可以最多带 1 个贴切 emoji；否则不要硬加。
+11. 如果原文术语很多，不要照抄术语拼装问题，先翻成人话里的核心意思。
+12. 长度控制在 12 到 30 个中文字符。
+13. 不要解释，不要分点，不要引号。
+14. 不要再输出“哪些能力”“怎么看”“如何做”“建议是什么”。
 
 内容类型参考：
 ${archetypeHints}
@@ -443,6 +478,12 @@ ${answerHints}
 
 可优先套用这些低压力问句骨架：
 ${questionFrameHints}
+
+语气和表情可参考：
+${styleHints}
+
+避免生硬可参考：
+${antiStiffnessHints}
 
 ${bloggerBlock}
 
@@ -483,6 +524,18 @@ function isUsableReply(text, finishReason, sourceText) {
   }
 
   if (isOverTemplatedReply(text, sourceText)) {
+    return false;
+  }
+
+  if (isMisalignedCelebrationReply(text, sourceText)) {
+    return false;
+  }
+
+  if (isJargonStackedReply(text, sourceText)) {
+    return false;
+  }
+
+  if (isStiffSummaryReply(text, sourceText)) {
     return false;
   }
 
@@ -533,6 +586,18 @@ function isFallbackReply(text, sourceText) {
     return false;
   }
 
+  if (isMisalignedCelebrationReply(text, sourceText)) {
+    return false;
+  }
+
+  if (isJargonStackedReply(text, sourceText)) {
+    return false;
+  }
+
+  if (isStiffSummaryReply(text, sourceText)) {
+    return false;
+  }
+
   if (!isQuestionLike(text)) {
     return false;
   }
@@ -571,6 +636,18 @@ function needsNarrowing(text, sourceText) {
     return true;
   }
 
+  if (isMisalignedCelebrationReply(trimmed, sourceText)) {
+    return true;
+  }
+
+  if (isJargonStackedReply(trimmed, sourceText)) {
+    return true;
+  }
+
+  if (isStiffSummaryReply(trimmed, sourceText)) {
+    return true;
+  }
+
   if (trimmed.length > 24 && !/[?？吗呢呀吧]$/.test(trimmed)) {
     return true;
   }
@@ -582,6 +659,10 @@ function buildIntentHints(sourceText) {
   const hints = [];
   const normalized = sourceText.replace(/\s+/g, " ");
 
+  if (isCelebrationBragSource(normalized)) {
+    hints.push("- 如果原文在报喜、晒榜单、晒成绩、庆祝里程碑，优先顺着“这波是不是更出圈了 / 这次算刷屏了吧 / 读者是不是明显更多了”去问，不要把它改成成因分析题。");
+  }
+
   if (/(盈利|收益|浮盈|翻倍|营收|赚|回补率|胜率|收益率|[0-9]+\s*万|[0-9]+%)/.test(normalized)) {
     hints.push("- 如果原文在晒结果、战绩、数据，优先往“这说明你判断对了吧 / 这个现在还能复制吗”这类评论靠。");
   }
@@ -592,6 +673,10 @@ function buildIntentHints(sourceText) {
 
   if (/(策略|方法|思路|逻辑|框架|复盘|经验|步骤|Q&A|教程|打法)/i.test(normalized)) {
     hints.push("- 如果原文在讲方法论，优先把大方法缩成一个单点判断，让博主只需要确认对不对。");
+  }
+
+  if (isMarketJargonSource(normalized)) {
+    hints.push("- 如果原文在讲交易博弈、做市商、对手盘、情绪节奏，优先问他真正想表达的那个核心判断，用人话说清，不要把术语原样复读。");
   }
 
   if (/(上线|更新|版本|功能|产品|插件|网站|app|工具站|新功能|内测|发布)/i.test(normalized)) {
@@ -633,6 +718,10 @@ function buildOpeningHints(sourceText) {
   const hints = [];
   const normalized = sourceText.replace(/\s+/g, " ");
 
+  if (isCelebrationBragSource(normalized)) {
+    hints.push("- 有报喜、晒榜单、晒成绩时，优先用“这波算…了吧”“现在是不是更…了”“这次算把…刷屏了吧”这类开头。");
+  }
+
   if (/(直播|电报|tg|群|链接|地址|脚本|工具|api|vps|入口|教程|文档|下载)/i.test(normalized)) {
     hints.push("- 有入口、链接、工具时，优先用“这个能直接…吗”“这个要先…吗”这类开头。");
   }
@@ -643,6 +732,14 @@ function buildOpeningHints(sourceText) {
 
   if (/(策略|方法|思路|逻辑|框架|复盘|经验|步骤|Q&A|教程|打法)/i.test(normalized)) {
     hints.push("- 有方法、经验时，优先用“这里主要是…吗”“先抓…就行吗”这类开头。");
+  }
+
+  if (isMarketJargonSource(normalized)) {
+    hints.push("- 有交易术语、博弈术语时，优先用“所以核心是…吗”“现在更像…吗”“是不是谁挤得多先收谁”这类更像人话的开头。");
+  }
+
+  if (isCynicalToneSource(normalized)) {
+    hints.push("- 有吐槽、无奈、嘲讽语气时，优先用“所以现在还是…吗”“这不就成了…吗”“等于是谁…谁先…”这类接话式开头。");
   }
 
   if (/(上线|更新|版本|功能|产品|插件|网站|app|新功能|内测|发布)/i.test(normalized)) {
@@ -676,6 +773,10 @@ function buildArchetypeHints(sourceText) {
   const hints = [];
   const normalized = sourceText.replace(/\s+/g, " ");
 
+  if (isCelebrationBragSource(normalized)) {
+    hints.push("- 报喜/晒榜单/里程碑/半开玩笑炫耀：博主更想别人接住这个成绩、热度或出圈感，而不是分析为什么会这样。");
+  }
+
   if (/(盈利|收益|浮盈|翻倍|营收|赚|胜率|收益率|[0-9]+\s*万|[0-9]+%)/.test(normalized)) {
     hints.push("- 晒结果/晒战绩：博主更想被确认判断准、时机好、结果是否可复制。");
   }
@@ -690,6 +791,10 @@ function buildArchetypeHints(sourceText) {
 
   if (/(策略|方法|思路|逻辑|框架|步骤|复盘|经验|教程|打法|Q&A)/i.test(normalized)) {
     hints.push("- 教方法/讲经验：博主更想被问一个关键单点，而不是被要求展开系统课程。");
+  }
+
+  if (isMarketJargonSource(normalized)) {
+    hints.push("- 交易判断/博弈观察/盘口心法：博主更想别人抓到他真正的交易判断，而不是机械复述术语。");
   }
 
   if (/(上线|更新|版本|功能|产品|插件|网站|app|新功能|内测|发布)/i.test(normalized)) {
@@ -726,6 +831,18 @@ function buildAnswerHints(sourceText) {
   hints.push("- 最好让博主只需回答：是 / 不是。");
   hints.push("- 或只需补一个名词、门槛、时间点、入口、对象、前置条件。");
 
+  if (isCelebrationBragSource(normalized)) {
+    hints.push("- 对报喜或榜单型内容，优先让他回答“算出圈了 / 读者变多了 / 这波确实超预期了”这类轻松确认句。");
+  }
+
+  if (isMarketJargonSource(normalized)) {
+    hints.push("- 对交易博弈型内容，优先让他回答“对，核心就是看哪边一边倒 / 对，本质是先看哪边情绪更挤”。");
+  }
+
+  if (isCynicalToneSource(normalized)) {
+    hints.push("- 对吐槽或无奈型内容，优先让他回答“对，差不多就是谁挤谁挨打 / 对，散户还是被牵着走”。");
+  }
+
   if (/(链接|地址|入口|工具|脚本|电报|tg|群|api|vps|教程|文档|下载)/i.test(normalized)) {
     hints.push("- 对资源型内容，优先让他回答“能不能直接用 / 需不需要先申请 / 去哪里进”。");
   }
@@ -756,6 +873,21 @@ function buildQuestionFrameHints(sourceText) {
   hints.push("- 这个能直接___吗");
   hints.push("- 这里更像___吗");
   hints.push("- 你这里主要是___吗");
+
+  if (isCelebrationBragSource(normalized)) {
+    hints.push("- 这波算彻底___了吧");
+    hints.push("- 这次是不是把___也带起来了");
+  }
+
+  if (isMarketJargonSource(normalized)) {
+    hints.push("- 所以核心是先看___吗");
+    hints.push("- 现在更像哪边___就先收哪边吗");
+  }
+
+  if (isCynicalToneSource(normalized)) {
+    hints.push("- 所以现在还是谁___谁先挨打吗");
+    hints.push("- 这不就等于专收最___那边吗");
+  }
 
   if (/(盈利|收益|浮盈|翻倍|营收|赚|胜率|收益率|[0-9]+\s*万|[0-9]+%)/.test(normalized)) {
     hints.push("- 这个现在还算能复制吗");
@@ -788,6 +920,45 @@ function buildQuestionFrameHints(sourceText) {
   return hints.slice(0, 6).join("\n");
 }
 
+function buildStyleHints(sourceText) {
+  const hints = [];
+  const normalized = sourceText.replace(/\s+/g, " ");
+
+  if (hasEmoji(sourceText)) {
+    hints.push("- 原文有 emoji，回复可以自然跟 1 个同类轻表情，但不要堆表情。");
+  } else {
+    hints.push("- 原文没有 emoji，就不要为了活泼而硬加表情。");
+  }
+
+  if (/(哈哈|哈哈哈|hhh|hh|笑死|臣妾|离谱|绝了|牛了|绷不住|懂的都懂|。{2,}|！)/.test(normalized)) {
+    hints.push("- 原文有玩笑、自嘲、兴奋语气，回复可以更松一点，别写得像客服或论文。");
+  }
+
+  if (isCelebrationBragSource(normalized)) {
+    hints.push("- 对报喜和晒成绩内容，语气可以带一点一起高兴、一起玩梗的感觉，但问题仍要小、易回。");
+  }
+
+  if (isCynicalToneSource(normalized)) {
+    hints.push("- 对吐槽、无奈、被拿捏这类内容，语气可以更松一点，像顺着抱怨接一句，不要写成分析报告。");
+  }
+
+  return hints.slice(0, 3).join("\n");
+}
+
+function buildAntiStiffnessHints(sourceText) {
+  const hints = [];
+  const normalized = sourceText.replace(/\s+/g, " ");
+
+  hints.push("- 少用“核心是 / 本质是 / 主要是”这种总结腔，除非原文本身就很正式。");
+  hints.push("- 优先像评论区真人那样接话，不要像在替博主写摘要。");
+
+  if (isMarketJargonSource(normalized) || isCynicalToneSource(normalized)) {
+    hints.push("- 这类内容优先写成“谁挤谁挨打 / 谁上头谁先被收 / 还是被牵着走”这种人话判断。");
+  }
+
+  return hints.slice(0, 3).join("\n");
+}
+
 function createsReplyPressure(text) {
   const pressurePatterns = [
     /展开讲/,
@@ -818,6 +989,103 @@ function isOverTemplatedReply(text, sourceText) {
   return true;
 }
 
+function isJargonStackedReply(text, sourceText) {
+  if (!isMarketJargonSource(sourceText)) {
+    return false;
+  }
+
+  const jargonPatterns = [
+    /抢板/,
+    /做反向/,
+    /做市商/,
+    /\bMM\b/i,
+    /三元博弈/,
+    /对手盘/,
+    /拉盘/,
+    /空的人多/,
+    /买的人多/,
+    /节奏/
+  ];
+
+  let hits = 0;
+  for (const pattern of jargonPatterns) {
+    if (pattern.test(text)) {
+      hits += 1;
+    }
+  }
+
+  return hits >= 2;
+}
+
+function isStiffSummaryReply(text, sourceText) {
+  if (!sourceText) {
+    return false;
+  }
+
+  const normalized = stripTrailingDecorations(text.trim());
+  if (!/^(所以)?(核心是|本质是|主要是)/.test(normalized)) {
+    return false;
+  }
+
+  if (isFormalSource(sourceText)) {
+    return false;
+  }
+
+  return isMarketJargonSource(sourceText) || isCynicalToneSource(sourceText);
+}
+
+function isMisalignedCelebrationReply(text, sourceText) {
+  if (!isCelebrationBragSource(sourceText)) {
+    return false;
+  }
+
+  if (mentionsExplicitCauseInSource(sourceText)) {
+    return false;
+  }
+
+  return /(更容易|主要是|是不是因为|原因是|为什么能|本质是|逻辑是|靠的是|非.+更|主要靠)/.test(text);
+}
+
+function isMarketJargonSource(sourceText) {
+  if (!sourceText) {
+    return false;
+  }
+
+  return /(做市商|\bMM\b|三元博弈|对手盘|抢板|拉盘|砸盘|空的人多|买的人多|盘口|节奏|流动性|情绪博弈|A股)/i.test(sourceText);
+}
+
+function isCynicalToneSource(sourceText) {
+  if (!sourceText) {
+    return false;
+  }
+
+  return /(散户|被玩弄股掌|被拿捏|被收割|挨打|谁上头|谁挤|还是被|无奈|绷不住|呵呵|hhh|哈哈|。。。|。。)/i.test(sourceText);
+}
+
+function isFormalSource(sourceText) {
+  if (!sourceText) {
+    return false;
+  }
+
+  return /(报告|复盘如下|总结如下|原因有三点|首先|其次|最后|结论是|模型|框架)/.test(sourceText);
+}
+
+function isCelebrationBragSource(sourceText) {
+  if (!sourceText) {
+    return false;
+  }
+
+  return /(横扫|上榜|榜单|飙升榜|热搜榜|新书榜|第一|冠军|top|破[0-9一二三四五六七八九十百千万亿]+|里程碑|刷屏|爆了|冲上|都在|三榜|成绩单|报喜|封神)/i.test(sourceText);
+}
+
+function mentionsExplicitCauseInSource(sourceText) {
+  if (!sourceText) {
+    return false;
+  }
+
+  return /(因为|原因|为啥|为什么|主要是|核心是|本质是|逻辑是)/.test(sourceText);
+}
+
 function startsWithShiBuShi(text) {
   return /^([^，。！？?？]{0,12}[，,])?\s*是不是/.test(text);
 }
@@ -831,7 +1099,9 @@ function isJudgmentHeavySource(sourceText) {
 }
 
 function isQuestionLike(text) {
-  if (/[?？]$/.test(text)) {
+  const normalized = stripTrailingDecorations(text);
+
+  if (/[?？]$/.test(normalized)) {
     return true;
   }
 
@@ -848,7 +1118,15 @@ function isQuestionLike(text) {
     /吧$/
   ];
 
-  return lowPressureQuestionPatterns.some((pattern) => pattern.test(text));
+  return lowPressureQuestionPatterns.some((pattern) => pattern.test(normalized));
+}
+
+function stripTrailingDecorations(text) {
+  return text.replace(/[\s"'“”'’)\]】》]+$/g, "").replace(/[\u{1F300}-\u{1FAFF}\u2600-\u27BF✨🔥💥🎉👏🥳😄😁😂🤣😊😉😍🤝]+$/gu, "");
+}
+
+function hasEmoji(text) {
+  return /[\u{1F300}-\u{1FAFF}\u2600-\u27BF✨🔥💥🎉👏🥳😄😁😂🤣😊😉😍🤝]/u.test(text);
 }
 
 function extractOpenAIText(data) {
