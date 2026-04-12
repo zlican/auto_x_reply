@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hook Reply Generator</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="app">
+      <section class="hero">
+        <p class="eyebrow">AI 自动优质回复</p>
+        <h1>Hook Reply Generator</h1>
+        <p class="subtitle">粘贴原文，生成一句更容易让博主顺手回复的评论。</p>
+      </section>
+
+      <section class="panel">
+        <div class="row">
+          <label class="field">
+            <span>AI 提供商</span>
+            <select id="provider">
+              <option value="openai_compatible">OpenAI 兼容 / Codex 配置</option>
+              <option value="gemini">Gemini</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span id="modelLabel">模型</span>
+            <input id="model" type="text" value="gpt-5.4" autocomplete="off" />
+          </label>
+        </div>
+
+        <label class="field">
+          <span id="apiKeyLabel">API Key</span>
+          <input id="apiKey" type="password" placeholder="填你的 API Key" autocomplete="off" />
+        </label>
+
+        <div class="row">
+          <label class="field">
+            <span>Base URL</span>
+            <input id="baseUrl" type="text" value="https://deeprouter.top/v1" autocomplete="off" />
+          </label>
+
+          <label class="field">
+            <span>博主名</span>
+            <input id="bloggerName" type="text" placeholder="例如：小牛哥" autocomplete="off" />
+          </label>
+        </div>
+
+        <label class="field">
+          <span>原文内容</span>
+          <textarea
+            id="sourceText"
+            rows="12"
+            placeholder="把文章、推文、长帖内容粘贴进来"
+          ></textarea>
+        </label>
+
+        <div class="actions">
+          <button id="generateBtn" class="primary" type="button">生成回复</button>
+          <button id="copyBtn" class="secondary" type="button" disabled>复制结果</button>
+        </div>
+
+        <p id="status" class="status" aria-live="polite"></p>
+
+        <label class="field">
+          <span>生成结果</span>
+          <textarea
+            id="resultText"
+            rows="4"
+            placeholder="这里会出现生成后的评论"
+            readonly
+          ></textarea>
+        </label>
+      </section>
+
+      <section class="tips">
+        <h2>生成规则</h2>
+        <ul>
+          <li>默认按你本机 Codex 风格配置走：`deeprouter + gpt-5.4`。</li>
+          <li>短句优先，避免废话和 AI 味。</li>
+          <li>紧扣原文细节，不能泛泛而谈。</li>
+          <li>把大问题缩成小判断，让博主容易接话。</li>
+        </ul>
+      </section>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

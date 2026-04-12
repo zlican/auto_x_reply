@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Hook Reply Generator",
+  "version": "0.1.0",
+  "description": "Paste source content and generate a short hooky reply with AI.",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "*://*/*"
+  ],
+  "action": {
+    "default_title": "Hook Reply Generator",
+    "default_popup": "popup.html"
+  }
+}
