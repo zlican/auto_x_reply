@@ -68,6 +68,32 @@ body {
   padding: 14px;
 }
 
+.mode-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 6px;
+  border-radius: 16px;
+  background: rgba(36, 24, 14, 0.06);
+}
+
+.mode-btn {
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--muted);
+  padding: 10px 12px;
+  font-weight: 700;
+}
+
+.mode-btn.active {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(182, 79, 42, 0.18);
+  color: var(--text);
+  box-shadow: 0 8px 20px rgba(81, 52, 27, 0.08);
+}
+
 .tips {
   margin-top: 12px;
   padding: 12px 14px;
@@ -95,6 +121,10 @@ body {
 .field {
   display: block;
   margin-bottom: 12px;
+}
+
+.field.is-full {
+  grid-column: 1 / -1;
 }
 
 .field span {
@@ -187,4 +217,8 @@ button:disabled {
 
 .status.success {
   color: #166534;
+}
+
+.is-hidden {
+  display: none;
 }

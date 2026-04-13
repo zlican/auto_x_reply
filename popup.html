@@ -11,10 +11,15 @@
       <section class="hero">
         <p class="eyebrow">AI 自动优质回复</p>
         <h1>Hook Reply Generator</h1>
-        <p class="subtitle">粘贴原文，先猜博主想听什么，再生成一句更容易让他顺手回复的评论。</p>
+        <p id="subtitle" class="subtitle">粘贴原文，先猜博主想听什么，再生成一句更容易让他顺手回复的评论。</p>
       </section>
 
       <section class="panel">
+        <div class="mode-switch" role="tablist" aria-label="生成模式">
+          <button id="replyModeBtn" class="mode-btn active" type="button" data-mode="reply" aria-pressed="true">意图回复</button>
+          <button id="summaryModeBtn" class="mode-btn" type="button" data-mode="summary" aria-pressed="false">内容总结</button>
+        </div>
+
         <div class="row">
           <label class="field">
             <span>AI 提供商</span>
@@ -36,19 +41,19 @@
         </label>
 
         <div class="row">
-          <label class="field">
+          <label id="baseUrlField" class="field">
             <span>Base URL</span>
             <input id="baseUrl" type="text" value="https://deeprouter.top/v1" autocomplete="off" />
           </label>
 
-          <label class="field">
+          <label id="bloggerField" class="field">
             <span>博主名</span>
             <input id="bloggerName" type="text" placeholder="例如：小牛哥" autocomplete="off" />
           </label>
         </div>
 
         <label class="field">
-          <span>原文内容</span>
+          <span id="sourceLabel">原文内容</span>
           <textarea
             id="sourceText"
             rows="12"
@@ -64,7 +69,7 @@
         <p id="status" class="status" aria-live="polite"></p>
 
         <label class="field">
-          <span>生成结果</span>
+          <span id="resultLabel">生成结果</span>
           <textarea
             id="resultText"
             rows="4"
@@ -76,7 +81,7 @@
 
       <section class="tips">
         <h2>生成规则</h2>
-        <ul>
+        <ul id="tipsList">
           <li>默认按你本机 Codex 风格配置走：`deeprouter + gpt-5.4`。</li>
           <li>短句优先，避免废话和 AI 味。</li>
           <li>紧扣原文细节，也会识别报喜、榜单、观点、故事、产品、情绪、招募等内容类型。</li>
